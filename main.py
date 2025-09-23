@@ -1,9 +1,6 @@
 import uvicorn
 
-from typing import Annotated
-
-from fastapi import FastAPI, Path
-from pydantic import EmailStr, BaseModel
+from fastapi import FastAPI
 
 from items_views import router as items_router
 from users.views import router as users_router
