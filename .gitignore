@@ -20,3 +20,11 @@ build/
 
 .DS_Store
 Thumbs.db
+
+# Byte-compiled / logs / coverage
+*.log
+*.pot
+*.pyc
+*.mo
+*.db
+*.sqlite3
