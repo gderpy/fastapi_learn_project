@@ -57,20 +57,29 @@ class DataBaseHelper:
 
     async def session_dependency(self) -> AsyncSession:
         """
-        Метод, который можно подключать в FastAPI через Depends.
+        Асинхронная зависимость для FastAPI.
 
-        Когда к API приходит запрос:
-        - создается новая сессия работы с БД
-        - в обработчике (endpoint) эта сессия используется
-        - после выполнения запроса сессия закрывается
+        Создаёт новую сессию для работы с базой данных на каждый запрос.
+        Сессия автоматически закрывается после завершения работы.
+        Используйте эту зависимость, если нужна отдельная сессия для каждого запроса.
+        """
+        async with self.session_factory() as session:
+            yield session
+            await session.close()
+        
+    async def scoped_session_dependency(self) -> AsyncSession:
+        """
+        Асинхронная зависимость для FastAPI с использованием scoped session.
+
+        Возвращает сессию, привязанную к текущей асинхронной задаче (например, к запросу).
+        Одинаковая сессия будет использоваться в рамках одной задачи.
+        Сессия автоматически закрывается после завершения работы.
+        Используйте эту зависимость, если нужно, чтобы в рамках одного запроса
+        использовалась одна и та же сессия в разных частях кода.
         """
         session = self.get_scoped_session()
-
-        # даем доступ к сессии
-        async with session() as sess:
-            yield sess
-            # после завершения работы сессия закрывается
-            await session.remove()
+        yield session
+        await session.close()
 
 
 db_helper = DataBaseHelper(url=settings.db_url, echo=settings.db_echo)
