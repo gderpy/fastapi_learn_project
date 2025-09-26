@@ -101,9 +101,11 @@ async def get_users_with_posts_and_profiles(session: AsyncSession):
 async def get_profiles_with_users_and_users_with_posts(session: AsyncSession):
     stmt = (
         select(Profile)
+        .join(Profile.user)
         .options(
             joinedload(Profile.user).selectinload(User.posts),
         )
+        .where(User.username == "John")
         .order_by(Profile.id)
     )
 
