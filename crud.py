@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.engine import Result
 from sqlalchemy.orm import joinedload, selectinload
 
-from core.models import db_helper, User, Profile, Post
+from core.models import db_helper, User, Profile, Post, Order, Product
 
 
 async def create_user(session: AsyncSession, username: str) -> User:
@@ -90,7 +90,7 @@ async def get_users_with_posts_and_profiles(session: AsyncSession):
         .order_by(User.id)
     )
     users = await session.scalars(stmt)
-    
+
     for user in users:
         print("**" * 10)
         print(user, user.profile and user.profile.first_name)
@@ -116,50 +116,98 @@ async def get_profiles_with_users_and_users_with_posts(session: AsyncSession):
         print(profile.user.posts)
 
 
+async def create_order(session: AsyncSession, promocode: str | None = None) -> Order:
+    order = Order(promocode=promocode)
+    session.add(order)
+    await session.commit()
+    return order
+
+
+async def create_product(
+    session: AsyncSession, name: str, description: str, price: int
+) -> Product:
+    product = Product(name=name, description=description, price=price)
+    session.add(product)
+    await session.commit()
+    return product
+
+
 async def main_relations(session: AsyncSession):
     # await create_user(session=session, username="Carl")
-        # await create_user(session=session, username="Sam")
+    # await create_user(session=session, username="Sam")
 
-        # user_sam = await get_user_by_username(session=session, username="Sam")
-        # user_john = await get_user_by_username(session=session, username="John")
+    # user_sam = await get_user_by_username(session=session, username="Sam")
+    # user_john = await get_user_by_username(session=session, username="John")
 
-        # await get_user_by_username(session=session, username="Bob")
+    # await get_user_by_username(session=session, username="Bob")
 
-        # await create_user_profile(
-        #     session=session,
-        #     user_id=user_john.id,
-        #     first_name="John"
-        # )
+    # await create_user_profile(
+    #     session=session,
+    #     user_id=user_john.id,
+    #     first_name="John"
+    # )
 
-        # await create_user_profile(
-        #     session=session,
-        #     user_id=user_sam.id,
-        #     first_name="Sam",
-        #     last_name="White"
-        # )
+    # await create_user_profile(
+    #     session=session,
+    #     user_id=user_sam.id,
+    #     first_name="Sam",
+    #     last_name="White"
+    # )
 
-        # await show_users_with_profiles(session=session)
+    # await show_users_with_profiles(session=session)
 
-        # await create_posts(
-        #     session,
-        #     user_john.id,
-        #     "SQL 2.0", "SQLA Joins")
-        # await create_posts(
-        #     session,
-        #     user_sam.id,
-        #     "FastAPI Intro", "FastAPI Advanced", "FastAPI More")
+    # await create_posts(
+    #     session,
+    #     user_john.id,
+    #     "SQL 2.0", "SQLA Joins")
+    # await create_posts(
+    #     session,
+    #     user_sam.id,
+    #     "FastAPI Intro", "FastAPI Advanced", "FastAPI More")
 
-        # await get_users_with_posts(session)
+    # await get_users_with_posts(session)
 
-        # await get_posts_with_authors(session=session)
+    # await get_posts_with_authors(session=session)
 
-        # await get_users_with_posts_and_profiles(session=session)
+    # await get_users_with_posts_and_profiles(session=session)
 
-        await get_profiles_with_users_and_users_with_posts(session=session)
+    await get_profiles_with_users_and_users_with_posts(session=session)
 
 
 async def demo_m2m(session: AsyncSession):
-    ...
+    order_one = await create_order(session=session)
+    order_promo = await create_order(session=session, promocode="promo")
+
+    mouse = await create_product(session, "Mouse", "Great gaming mouse", price=123)
+    keyboard = await create_product(
+        session, "Keyboard", "Great gaming keyboard", price=149
+    )
+    display = await create_product(session, "Display", "Office display", price=299)
+
+    order_one = await session.scalar(
+        select(Order)
+        .where(Order.id == order_one.id)
+        .options(
+            selectinload(Order.products),
+        ),
+    )
+
+    order_promo = await session.scalar(
+        select(Order)
+        .where(Order.id == order_promo.id)
+        .options(
+            selectinload(Order.products),
+        ),
+    )
+
+    order_one.products.append(mouse)
+    order_one.products.append(keyboard)
+    # order_promo.products.append(keyboard)
+    # order_promo.products.append(display)
+
+    order_promo.products = [keyboard, display]
+
+    await session.commit()
 
 
 async def main():
