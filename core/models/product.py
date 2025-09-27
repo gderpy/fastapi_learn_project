@@ -4,7 +4,6 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import String, Integer, Text
 
 from .base import Base
-from .order_product_association import order_product_association_table
 
 if TYPE_CHECKING:
     from .order import Order
@@ -15,5 +14,5 @@ class Product(Base):
     description: Mapped[str] = mapped_column(Text())
     price: Mapped[int] = mapped_column(Integer) 
     orders: Mapped[list["Order"]] = relationship(
-        secondary=order_product_association_table, back_populates="products"
+        secondary="order_product_association", back_populates="products"
     )
