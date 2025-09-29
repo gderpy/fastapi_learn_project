@@ -9,5 +9,7 @@ john:supersecret -> dXNlcm5hbWU6cGFzc3dvcmQ=
 echo dXNlcm5hbWU6cGFzc3dvcmQ= | base64 -D
 https://www.base64decode.org
 
+python -c 'import secrets; print(secrets.token_hex())'
+
 - Token Auth
 - Cookie Auth
