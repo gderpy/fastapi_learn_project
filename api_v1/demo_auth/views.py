@@ -1,8 +1,8 @@
-import secrets
+import secrets, uuid, time
 
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, status, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Header, Response
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 
@@ -86,3 +86,27 @@ def demo_auth_http_header(
         "message": f"Hi, {username}!",
         "username": username,
     }
+
+
+COOKIES: dict[str, dict[str, Any]] = {}
+COOKIE_SESSION_ID_KEY = "web-app-session-id"
+
+def generate_session_id() -> str:
+    return uuid.uuid4().hex
+
+
+@router.post("/login-cookie/")
+def demo_auth_login_set_cookies(
+    response: Response,
+    auth_username: str = Depends(get_auth_user_username),
+    ):
+    session_id = generate_session_id()
+    COOKIES["session_id"] = {
+        "username": auth_username,
+        "login_at": int(time.time())
+    }
+    response.set_cookie(COOKIE_SESSION_ID_KEY, session_id)
+    return {
+        "result": "ok"
+    }
+
